@@ -47,8 +47,7 @@ oneOf
 is usually faster than
 ```elm
 oneOf
-    [ symbol "()"
-    , symbol "(" |> continueWith
+    [ symbol "(" |> continueWith
         (oneOf
             [ symbol ")"
             , ...
