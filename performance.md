@@ -1,8 +1,8 @@
 Unlike most other aspects of elm, making your parser faster will likely make it less readable
 and harder to understand.
 
-I have not found improving performance to be all that intuitive at all.
-Most things listed below have exceptions listed (and likely others I haven't encountered or noticed).
+I have not found improving performance to be all that intuitive.
+Most advice below has exceptions listed (and likely others I haven't encountered or noticed).
 
 ### The key to success is not `succeed`
 
@@ -69,34 +69,6 @@ is slightly worse. See also: [section "constructing parsers dynamically is evil"
 
 A final tip: use `mapChompedString (\() string -> )` instead of `map (\string -> ) (getChompedString ...)` wherever you can.
 
-### nested `oneOf` is not great
-
-E.g.
-```elm
-oneOf
-    [ symbol "()"
-    , symbol "(" |> continueWith ...
-    , ...
-    ]
-```
-is usually faster than
-```elm
-oneOf
-    [ symbol "("
-        |> continueWith
-            (oneOf
-                [ symbol ")"
-                , ...
-                ]
-            )
-    , ...
-    ]
-```
-
-unless
-- the shared token is more expensive
-- there are much more than 2 with the same shared start
-- there are a lot of likely possibilities below
 
 ### constructing parsers dynamically is evil
 
@@ -237,3 +209,36 @@ Since `Parser.Parser` is an alias of the advanced type,
 the only thing you have to change is the `Step` and `loop` qualification.
 
 This change saves a `Parser.map` for every loop step internally.
+
+### nested `oneOf` is not great
+
+E.g.
+```elm
+oneOf
+    [ symbol "()"
+    , symbol "(" |> continueWith ...
+    , ...
+    ]
+```
+is usually faster than
+```elm
+oneOf
+    [ symbol "("
+        |> continueWith
+            (oneOf
+                [ symbol ")"
+                , ...
+                ]
+            )
+    , ...
+    ]
+```
+
+The impact of this optimization will only be small
+but especially if one of the top-level possibilities is itself a `oneOf` under the hood,
+flattening it out is a good idea.
+
+You should probably not do it if
+  - the shared token is more expensive
+  - there are much more than 2 possibilities with the same shared start
+  - there are a lot of likely possibilities below
