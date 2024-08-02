@@ -36,7 +36,7 @@ TODO but I've not benchmarked this
 
 ### nested map is bad
 
-Imagine e.g.
+E.g.
 ```elm
 functionDeclaration =
     ...
