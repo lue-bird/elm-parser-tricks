@@ -1,6 +1,40 @@
 Unlike most other aspects of elm, making your parser faster will likely make it less readable
 and harder to understand.
 
+I have not found improving performance to be all that intuitive at all.
+Most things listed below have exceptions listed (and likely others I haven't encountered or noticed).
+
+### The key to success is not `succeed`
+
+#### ~`succeed (\) |= first`~ `map (\) first`
+
+Yes you heard it right. `|=`, `|.` etc look pretty nice but
+since they are a `map2` underneath.
+This means
+We first construct a new parser with `succeed`, case on it,
+case on the incoming parser, apply.
+If we instead use `map` directly on the parser, we
+just case on it, and apply a given function.
+
+#### ~`succeed (\) |. first |= second`~ `first |> continueWith (map (\) second)`
+
+with
+```elm
+continueWith next before =
+    before |> Parser.andThen (\() -> next)
+```
+which allows us to not worry about pre-defining the "next" parser (see [section "constructing parsers dynamically is evil"](constructing-parsers-dynamically-is-evil)),
+we can just as above avoid a `map2`.
+
+This might be minimally faster compared to
+```elm
+map (\() secondResult -> ...)
+    first
+    |= second
+```
+TODO but I've not benchmarked this
+
+
 ### nested map is bad
 
 Imagine e.g.
@@ -36,6 +70,7 @@ is slightly worse. See also: [section "constructing parsers dynamically is evil"
 A final tip: use `mapChompedString (\() string -> )` instead of `map (\string -> ) (getChompedString ...)` wherever you can.
 
 ### nested `oneOf` is not great
+
 E.g.
 ```elm
 oneOf
@@ -47,15 +82,17 @@ oneOf
 is usually faster than
 ```elm
 oneOf
-    [ symbol "(" |> continueWith
-        (oneOf
-            [ symbol ")"
-            , ...
-            ]
-        )
+    [ symbol "("
+        |> continueWith
+            (oneOf
+                [ symbol ")"
+                , ...
+                ]
+            )
     , ...
     ]
 ```
+
 unless
 - the shared token is more expensive
 - there are much more than 2 with the same shared start
@@ -115,36 +152,6 @@ Parser.getCol
 ```
 Lookaheads and lookbehinds usually benefit from this pattern.
 
-### The key to success is not `succeed`
-
-#### ~`succeed (\) |= first`~ `map (\) first`
-
-Yes you heard it right. `|=`, `|.` etc look pretty nice but
-since they are a `map2` underneath.
-This means
-We first construct a new parser with `succeed`, case on it,
-case on the incoming parser, apply.
-If we instead use `map` directly on the parser, we
-just case on it, and apply a given function.
-
-#### ~`succeed (\) |. first |= second`~ `first |> continueWith (map (\) second)`
-
-with
-```elm
-continueWith next before =
-    before |> Parser.andThen (\() -> next)
-```
-which allows us to not worry about pre-defining the "next" parser,
-we can just as above avoid a `map2`.
-
-This might be minimally faster compared to
-```elm
-map (\() secondResult -> ...)
-    first
-    |= second
-```
-TODO but I've not benchmarked this
-
 ### `variable` is faster than non-empty chomping
 even when you discard the result implicitly,
 `chompIf ... | chompWhile` or `symbol ... |. chompWhile`
@@ -180,3 +187,4 @@ There are 2 ways to fix this:
   - move the `getPosition` one level higher out of the `oneOf` (less general and less performant)
   - move the `getPosition` after the identifying start symbol (more general but error prone since you have to calculate the actual start position)
 
+Note that 1 will actually perform better if a common possibility parser is ambiguous and needs to backtrack anyways (like `Parser.number`).
