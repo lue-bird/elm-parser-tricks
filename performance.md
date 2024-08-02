@@ -13,7 +13,7 @@ since they are a `map2` underneath, we first construct a new parser with `succee
 case on the incoming parser, apply.
 
 If we instead use `map` directly on the parser, we
-just case on it, and apply a given function.
+just case on it and apply a given function.
 
 #### replace `succeed (\) |. first |= second` by `first |> continueWith (map (\) second)`
 
