@@ -226,3 +226,14 @@ like `symbol "," |> continueWith element`.
 
 It also (for the most part) doesn't apply it the end is itself not trivial to check for (e.g. `finalExpression` in `{variable = value\n}finalExpression`).
 If you know fewer elements are way more common, it might make sense, though.
+
+### `Parser` is fine, except for `Parser.loop`
+
+`Parser.x` helpers are usually direct or very cheap calls to `Parser.Advanced.x`,
+so switching won't do much.
+
+The only exception is `Parser.loop` which you should replace by `Parser.Advanced.loop`.
+Since `Parser.Parser` is an alias of the advanced type,
+the only thing you have to change is the `Step` and `loop` qualification.
+
+This change saves a `Parser.map` for every loop step internally.
