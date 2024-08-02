@@ -160,12 +160,19 @@ are slower than
 variable { start = \c -> ..., inner = \c -> ..., reserved = Set.empty }
 ```
 
+TODO verify this is also the case for only `chompWhile |> getChompedString`
+
+The one exception is if you actually need to `map` the resulting string.
+There `variable |> map f` will be slower than `chompWhile |> mapChompedString (\() s -> f s)`
+
+TODO verify this is also the case for only `chompIf |. chompWhile |> getChompedString`
+
 ### `keyword` is fast
 It's only minimally slower than `symbol`, so if you need to check for whitespace after a character,
 `keyword` should be a no-brainer for well... keywords because it allows you to not explicitly handle "non-empty" whitespace.
 
 ### avoid `|= getPosition` etc whenever you can
-rely on the information
+rely on the information TODO
 
 ### use backtracking parsers as little as possible
 
