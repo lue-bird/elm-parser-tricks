@@ -6,7 +6,7 @@ Most advice below has exceptions listed (and likely others I haven't encountered
 
 ### The key to success is not `succeed`
 
-#### ~`succeed (\) |= first`~ `map (\) first`
+#### replace `succeed (\) |= first` by `map (\) first`
 
 Yes you heard it right. `|=`, `|.` etc look pretty nice but
 since they are a `map2` underneath.
@@ -16,7 +16,7 @@ case on the incoming parser, apply.
 If we instead use `map` directly on the parser, we
 just case on it, and apply a given function.
 
-#### ~`succeed (\) |. first |= second`~ `first |> continueWith (map (\) second)`
+#### replace `succeed (\) |. first |= second` by `first |> continueWith (map (\) second)`
 
 with
 ```elm
