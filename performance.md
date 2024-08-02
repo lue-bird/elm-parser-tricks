@@ -195,3 +195,34 @@ There are 2 ways to fix this:
   - move the `getPosition` after the identifying start symbol (more general but error prone since you have to calculate the actual start position)
 
 Note that 1 will actually perform better if a common possibility parser is ambiguous and needs to backtrack anyways (like `Parser.number`).
+
+### shortcut to end
+
+This might be the most obvious but it's easy to miss.
+
+Blocks of non-trivially-separated elements (usually with whitespace in between) that have a fixed end symbol can make use of this to exit element checks early.
+Examples of such an end symbols:
+  - `in` in `let {declarations} in` (like in e.g. elm)
+  - `=` in `functionName {arguments} =` (like in e.g. elm)
+  - `)` in `functionName({arguments})` (like in e.g. java)
+  - `}` in `{{statements without semicolons}}` (like in e.g. java)
+
+```elm
+until : Parser () -> Parser a -> Parser (List a)
+until end element =
+    let
+        step : List a -> Parser (Parser.Step (List a) (List a))
+        step itemsSoFar =
+            Parser.oneOf
+                [ Parser.map (\() -> Parser.Done (List.reverse itemsSoFar)) end
+                , Parser.map (\el -> Parser.Loop (el :: itemsSoFar)) element
+                ]
+    in
+    Parser.loop [] step
+```
+
+This advice does not apply if your elements are cheap to check for,
+like `symbol "," |> continueWith element`.
+
+It also (for the most part) doesn't apply it the end is itself not trivial to check for (e.g. `finalExpression` in `{variable = value\n}finalExpression`).
+If you know fewer elements are way more common, it might make sense, though.
