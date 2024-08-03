@@ -212,7 +212,12 @@ It's only minimally slower than `symbol`, so if you need to check for whitespace
 `keyword` should be a no-brainer for well... keywords because it allows you to not explicitly handle "non-empty" whitespace.
 
 ### avoid `|= getPosition` etc whenever you can
-rely on the information TODO
+Sometimes locations can be inferred from what you've parsed.
+E.g.
+  - an `if` expression already knows when the `else` branch expression ends
+  - an unqualified function name can derive the start/end from the location of one side and it's length
+  - a single-line comment only spans one line (what!?) so you only need `getCol` to calculate the end location
+  - a type declaration must not be indented, so you only need `getRow` to calculate the start location   
 
 ### use backtracking parsers as little as possible
 
