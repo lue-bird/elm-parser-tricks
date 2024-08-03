@@ -156,7 +156,7 @@ Note: you'll get some small extra performance there if each variant has the same
 
 Exceptions:
 
-Using `Parser.loop`, a step that's a single `oneOf`
+Using `loop`, a step that's a single `oneOf`
 with cheap parsers tends to be surprisingly fast still,
 compared to e.g. a step which is a `map` on a pre-defined parser
 (do keep an eye out for optimizations like that, though).
