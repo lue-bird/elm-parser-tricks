@@ -39,14 +39,14 @@ E.g.
 ```elm
 functionDeclaration =
     ...
-    |= oneOf
-        [ map Just typeSignature
-        , succeed Nothing
+    |= Parser.oneOf
+        [ Parser.map Just typeSignature
+        , Parser.succeed Nothing
         ]
     |= implementation
 
 typeSignature =
-    succeed (\name type_ -> ...)
+    Parser.succeed (\name type_ -> ...)
         |= ...
 ```
 Intermediate summarizing of information is poison.
