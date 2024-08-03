@@ -70,7 +70,8 @@ A final tip: use `mapChompedString (\() string -> )` instead of `map (\string ->
 
 ### constructing parsers dynamically is evil
 
-Sometimes (and that's somewhat bad design I'd say), the exact structure you parse into is not determined after parsing
+Sometimes (and that's somewhat bad design from the format you're parsing I'd say),
+the exact structure you parse into is not determined after parsing
 a first piece of data.
 
 E.g. with `public static final @Export` you could continue with `class`, a function name etc.
@@ -141,9 +142,9 @@ type AfterModifiers
     = ClassAfterModifiers ...
     | FunctionAfterModifiers ...
 
-classWithModifiers : Parser (Modifiers -> Class)
-classWithModifiers =
-    succeed (\rest modifiers {-as the last argument-} -> { modifiers = modifiers, ...rest })
+classAfterModifiers : Parser AfterModifiers
+classAfterModifiers =
+    succeed (\...afterModifiers -> { ...afterModifiers })
         |= ...
 -- same for functionWithModifiers
 ```
