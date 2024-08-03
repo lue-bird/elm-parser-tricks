@@ -224,7 +224,7 @@ E.g.
 ### use backtracking parsers as little as possible
 
 This one is less obvious than you might think!
-Parsers like `getCol`, `getRow`, `getIndent`, `getPosition`, `getOffset`, `getSource`, `succeed`, `end`, `oneOf` with no possibilities, `loop` that succeeds immediately, etc. need to be backtrackable
+Parsers like `getCol`, `getRow`, `getIndent`, `getPosition`, `getOffset`, `getSource`, `succeed`, `end`, `oneOf` with no possibilities, `loop` that succeeds immediately, etc. are always backtrackable
 because they don't consume characters.
 
 So if we e.g. have
