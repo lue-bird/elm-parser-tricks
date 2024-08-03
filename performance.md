@@ -19,11 +19,10 @@ just case on it and apply a given function.
 
 This avoids a `map2` just as above.
 
-If you had `succeed identity |. ignored |= kept`,
-there's an even faster way:
-```elm
-ignored |> continueWith kept
-```
+### replace `succeed identity |= kept |. ignored` by `kept |. ignored`
+`succeed identity |=` is unnecessary.
+
+### replace `succeed identity |. ignored |= kept` by `ignored |> continueWith kept`
 using
 ```elm
 {-| Like `Parser.andThen (\() -> ...)` but circumvents laziness
