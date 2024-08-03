@@ -156,25 +156,27 @@ Note: you'll get some small extra performance there if each variant has the same
 
 *Exceptions:
 
-When using `Parser.loop` with a step that's a single `oneOf` (do keep an eye out for optimizations there, though).
+Using `Parser.loop`, a step that's a single `oneOf`
+with cheap parsers tends to be surprisingly fast still,
+compared to e.g. a step which is a `map` on a pre-defined parser
+(do keep an eye out for optimizations like that, though).
 
-Also, if the parser to construct dynamically is very small
+In most cases, if the parser to construct dynamically is cheap
 and not dynamically constructing it would result in an extra step
 ```elm
 Parser.map
-    (\column ->
-        \indent ->
-            if indent < column then
-                succeedUnit
+    (\column indent ->
+        if column > indent then
+            predefinedSucceedUnit
 
-            else
-                problemPositivelyIndented
+        else
+            predefinedProblemPositivelyIndented
     )
     Parser.getCol
     |= Parser.getIndent
     |> Parser.andThen identity
 ```
-which you can also write as
+you can rewrite it to the faster
 ```elm
 Parser.getCol
     |> Parser.andThen
@@ -182,10 +184,10 @@ Parser.getCol
             Parser.andThen
                 (\indent ->
                     if column > indent then
-                        Parser.succeed ()
+                        predefinedSucceedUnit
 
                     else
-                        Parser.problem "must be positively indented"
+                        predefinedProblemPositivelyIndented
                 )
                 Parser.getIndent
         )
