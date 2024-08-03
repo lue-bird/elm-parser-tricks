@@ -154,7 +154,7 @@ Note: you'll get some small extra performance there if each variant has the same
 [article "Improving the performance of Custom Types" by Robin Heggelund Hansen](https://medium.com/bekk/improving-the-performance-of-custom-types-39f7e2a1d8e1)
 
 
-*Exceptions:
+Exceptions:
 
 Using `Parser.loop`, a step that's a single `oneOf`
 with cheap parsers tends to be surprisingly fast still,
