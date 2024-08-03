@@ -79,7 +79,7 @@ TODO
 ```
 
 There are roughly 3 solutions for this:
-  - aggressive reliance on pre-defined parsers in `andThen`
+  - aggressive reliance on pre-defined parsers in `andThen` (you can use [`elm-review-predefine`](https://github.com/lue-bird/elm-review-predefine) to find spots that could be problematic)
   - apply style trick
   - intermediate union type
 
