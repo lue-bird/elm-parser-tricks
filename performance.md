@@ -6,7 +6,7 @@ Most advice below has exceptions listed (and likely others I haven't encountered
 
 ### The key to success is not `succeed`
 
-#### replace `succeed (\) |= first` by `map (\) first`
+#### replace `succeed f |= first` by `map f first`
 
 Yes you heard it right. `|=`, `|.` etc look pretty nice but
 since they are a `map2` underneath, we first construct a new parser with `succeed`, case on it,
@@ -15,23 +15,9 @@ case on the incoming parser, apply.
 If we instead use `map` directly on the parser, we
 just case on it and apply a given function.
 
-#### replace `succeed (\) |. first |= second` by `first |> continueWith (map (\) second)`
+#### replace `succeed f |. first |= second` by `map (\() -> f) first |= second`
 
-with
-```elm
-continueWith next before =
-    before |> Parser.andThen (\() -> next)
-```
-which allows us to not worry about pre-defining the "next" parser (see [section "constructing parsers dynamically is evil"](constructing-parsers-dynamically-is-evil)),
-we can just as above avoid a `map2`.
-
-This might be minimally faster compared to
-```elm
-map (\() secondResult -> ...)
-    first
-    |= second
-```
-TODO but I've not benchmarked this
+This avoids a `map2` just as above.
 
 
 ### nested map is bad
