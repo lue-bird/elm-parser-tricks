@@ -71,19 +71,88 @@ A final tip: use `mapChompedString (\() string -> )` instead of `map (\string ->
 
 ### constructing parsers dynamically is evil
 
+Sometimes (and that's somewhat bad design I'd say), the exact structure you parse into is not determined after parsing
+a first piece of data.
+
+E.g. with `public static final @Export` you could continue with `class`, a function name etc.
+```elm
+modifiers
+    |> Parser.andThen
+        (\modifiersResult ->
+            Parser.oneOf
+                [ classWithModifiers modifiersResult
+                , functionWithModifiers modifiersResult
+                ]
+        )
+
+classWithModifiers : Modifiers -> Parser Class
+classWithModifiers modifiers =
+    succeed (\rest -> { modifiers = modifiers, ...rest })
+        |= ...
+-- same for functionWithModifiers
+```
 It is really convenient and easy to reach for `andThen`
 when you want to continue after parsing existing shared data.
 
-```elm
-TODO
-```
+This will however construct parsers for `classWithModifiers` and `functionWithModifiers`
+again and again even though their parser shape never actually changes,
+and that's really not free.
 
 There are roughly 3 solutions for this:
   - aggressive reliance on pre-defined parsers in `andThen` (you can use [`elm-review-predefine`](https://github.com/lue-bird/elm-review-predefine) to find spots that could be problematic)
   - apply style trick
   - intermediate union type
 
-TODO show each example
+With the apply style trick:
+```elm
+succeed (\modifiersResult withModifiers -> withModifiers modifiersResult)
+    |= modifiers
+    |= Parser.oneOf
+        [ classWithModifiers
+        , functionWithModifiers
+        ]
+
+classWithModifiers : Parser (Modifiers -> Class)
+classWithModifiers =
+    succeed (\rest modifiers {-as the last argument-} -> { modifiers = modifiers, ...rest })
+        |= ...
+-- same for functionWithModifiers
+```
+It does the job.
+I have a personal distaste for it because it hands the ability to construct the full thing to a sub-parser which is kinda weird.
+
+With an intermediate union type:
+```elm
+succeed
+    (\modifiersResult afterModifiers ->
+        case afterModifiers of
+            ClassAfterModifiers classAfterModifiers ->
+                Class { modifiers = modifiersResult, ...classAfterModifiers }
+            
+            FunctionAfterModifiers functionAfterModifiers ->
+                Function { modifiers = modifiersResult, ...functionAfterModifiers }
+    )
+    |= modifiers
+    |= Parser.oneOf
+        [ classAfterModifiers
+        , functionAfterModifiers
+        ]
+
+type AfterModifiers
+    = ClassAfterModifiers ...
+    | FunctionAfterModifiers ...
+
+classWithModifiers : Parser (Modifiers -> Class)
+classWithModifiers =
+    succeed (\rest modifiers {-as the last argument-} -> { modifiers = modifiers, ...rest })
+        |= ...
+-- same for functionWithModifiers
+```
+I find this the option that's easiest to understand among the 3.
+It also doesn't compromise on speed.
+Note: you'll get some small extra performance there if each variant has the same number of arguments:
+[article "Improving the performance of Custom Types" by Robin Heggelund Hansen](https://medium.com/bekk/improving-the-performance-of-custom-types-39f7e2a1d8e1)
+
 
 *Exceptions:
 
@@ -195,7 +264,7 @@ until end element =
 This advice does not apply if your elements are cheap to check for,
 like `symbol "," |> continueWith element`.
 
-It also (for the most part) doesn't apply it the end is itself not trivial to check for (e.g. `finalExpression` in `{variable = value\n}finalExpression`).
+It also (for the most part) doesn't apply it the end is itself not trivial to check for (e.g. `finalExpression` in `{variable = value\n}finalExpression`, where `finalExpression` needs to be backtrackable).
 If you know fewer elements are way more common, it might make sense, though.
 
 ### `Parser` is fine, except for `Parser.loop`
