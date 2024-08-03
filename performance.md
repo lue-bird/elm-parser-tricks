@@ -330,5 +330,6 @@ lazy (\() -> succeed (Parser.Done (List.reverse items)))
 This technically violates [section "constructing parsers dynamically is evil"](constructing-parsers-dynamically-is-evil)
 but since this will only be called once, it'll be fine!
 
-TODO I do not have concrete data on at which point it's better to use
-`lazy` than `succeed` directly. It's somewhere around "three field record".
+I can't tell you at which point it's better to use
+`lazy` than `succeed` directly.
+Be suspicious around maybe "three field record".
