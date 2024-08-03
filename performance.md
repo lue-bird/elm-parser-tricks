@@ -19,6 +19,20 @@ just case on it and apply a given function.
 
 This avoids a `map2` just as above.
 
+If you had `succeed identity |. ignored |= kept`,
+there's an even faster way:
+```elm
+ignored |> continueWith kept
+```
+using
+```elm
+{-| Like `Parser.andThen (\() -> ...)` but circumvents laziness
+-}
+continueWith : Parser.Parser b -> Parser.Parser () -> Parser.Parser b
+continueWith b a =
+    a |> Parser.andThen (\() -> b)
+```
+To learn about why we need to "circumvent laziness", see [section "constructing parsers dynamically is evil"](constructing-parsers-dynamically-is-evil)
 
 ### nested map is bad
 
