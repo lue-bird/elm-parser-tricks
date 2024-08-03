@@ -315,3 +315,21 @@ You should probably not do it if
   - the shared token is more expensive
   - there are much more than 2 possibilities with the same shared start
   - there are a lot of likely possibilities below
+
+### `lazy` is pretty good
+
+You might have seen code like
+```elm
+succeed () |> map (\() -> Parser.Done (List.reverse items))
+```
+to avoid calling `List.reverse` at every step.
+
+There's a function for that that's faster because it doesn't need to case on the result like `map`:
+```elm
+lazy (\() -> succeed (Parser.Done (List.reverse items)))
+```
+This technically violates [section "constructing parsers dynamically is evil"](constructing-parsers-dynamically-is-evil)
+but since this will only be called once, it'll be fine!
+
+TODO I do not have concrete data on at which point it's better to use
+`lazy` than `succeed` directly. It's somewhere around "three field record".
