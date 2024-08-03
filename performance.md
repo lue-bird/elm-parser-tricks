@@ -27,7 +27,7 @@ using
 ```elm
 {-| Like `Parser.andThen (\() -> ...)` but circumvents laziness
 -}
-continueWith : Parser.Parser b -> Parser.Parser () -> Parser.Parser b
+continueWith : Parser b -> Parser () -> Parser b
 continueWith b a =
     a |> Parser.andThen (\() -> b)
 ```
@@ -105,7 +105,7 @@ There are roughly 3 solutions for this:
 
 With the apply style trick:
 ```elm
-succeed (\modifiersResult withModifiers -> withModifiers modifiersResult)
+Parser.succeed (\modifiersResult withModifiers -> withModifiers modifiersResult)
     |= modifiers
     |= Parser.oneOf
         [ classWithModifiers
@@ -114,7 +114,7 @@ succeed (\modifiersResult withModifiers -> withModifiers modifiersResult)
 
 classWithModifiers : Parser (Modifiers -> Class)
 classWithModifiers =
-    succeed (\rest modifiers {-as the last argument-} -> { modifiers = modifiers, ...rest })
+    Parser.succeed (\rest modifiers {-as the last argument-} -> { modifiers = modifiers, ...rest })
         |= ...
 -- same for functionWithModifiers
 ```
@@ -123,7 +123,7 @@ I have a personal distaste for it because it hands the ability to construct the 
 
 With an intermediate union type:
 ```elm
-succeed
+Parser.succeed
     (\modifiersResult afterModifiers ->
         case afterModifiers of
             ClassAfterModifiers classAfterModifiers ->
@@ -144,7 +144,7 @@ type AfterModifiers
 
 classAfterModifiers : Parser AfterModifiers
 classAfterModifiers =
-    succeed (\...afterModifiers -> { ...afterModifiers })
+    Parser.succeed (\...afterModifiers -> { ...afterModifiers })
         |= ...
 -- same for functionWithModifiers
 ```
@@ -229,19 +229,19 @@ because they don't consume characters.
 
 So if we e.g. have
 ```elm
-oneOf
-    [ map (\) getPosition |. symbol "(" |= ...typeA
-    , map (\) getPosition |. symbol "[" |= ...typeB
-    , map (\) getPosition |. symbol "{" |= ...typeC
+Parser.oneOf
+    [ ... Parser.getPosition |. Parser.symbol "(" |= ...typeA
+    , ... Parser.getPosition |. Parser.symbol "[" |= ...typeB
+    , ... Parser.getPosition |. Parser.symbol "{" |= ...typeC
     ]
 ```
-The `getPosition` parser will be called three times in the worst case.
+The `getPosition` parser and the map on it will be called three times in the worst case.
 
 There are 2 ways to fix this:
   - move the `getPosition` one level higher out of the `oneOf` (less general and less performant)
   - move the `getPosition` after the identifying start symbol (more general but error prone since you have to calculate the actual start position)
 
-Note that 1 will actually perform better if a common possibility parser is ambiguous and needs to backtrack anyways (like `Parser.number`).
+Note that 1 will actually perform better if a common possibility parser is ambiguous and needs to backtrack anyways (like `number`).
 
 ### shortcut to end
 
@@ -289,19 +289,19 @@ This change saves a `Parser.map` for every loop step internally.
 
 E.g.
 ```elm
-oneOf
-    [ symbol "()"
-    , symbol "(" |> continueWith ...
+Parser.oneOf
+    [ Parser.symbol "()"
+    , Parser.symbol "(" |> continueWith ...
     , ...
     ]
 ```
 is usually faster than
 ```elm
-oneOf
-    [ symbol "("
+Parser.oneOf
+    [ Parser.symbol "("
         |> continueWith
-            (oneOf
-                [ symbol ")"
+            (Parser.oneOf
+                [ Parser.symbol ")"
                 , ...
                 ]
             )
@@ -322,13 +322,13 @@ You should probably not do it if
 
 You might have seen code like
 ```elm
-succeed () |> map (\() -> Parser.Done (List.reverse items))
+succeed () |> map (\() -> Done (List.reverse items))
 ```
 to avoid calling `List.reverse` at every step.
 
 There's a function for that that's faster because it doesn't need to case on the result like `map`:
 ```elm
-lazy (\() -> succeed (Parser.Done (List.reverse items)))
+lazy (\() -> succeed (Done (List.reverse items)))
 ```
 This technically violates [section "constructing parsers dynamically is evil"](constructing-parsers-dynamically-is-evil)
 but since this will only be called once, it'll be fine!
