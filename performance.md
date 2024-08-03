@@ -22,7 +22,10 @@ This avoids a `map2` just as above.
 ### replace `succeed identity |= kept |. ignored` by `kept |. ignored`
 `succeed identity |=` is unnecessary.
 
-### replace `succeed identity |. ignored |= kept` by `ignored |> continueWith kept`
+### replace `succeed () |. ignored |. ignored2` by `ignored |. ignored2`
+`succeed () |.` is unnecessary.
+
+### replace `succeed ignored |. ignored |= kept` by `ignored |> continueWith kept`
 using
 ```elm
 {-| Like `Parser.andThen (\() -> ...)` but circumvents laziness
