@@ -8,7 +8,7 @@ Most advice below has exceptions listed (and likely others I haven't encountered
 
 #### replace `succeed f |= first` by `map f first`
 
-Yes you heard it right. `|=`, `|.` etc look pretty nice but
+`|=` and `|.` look pretty but
 since they are a `map2` underneath, we first construct a new parser with `succeed`, case on it,
 case on the incoming parser, apply.
 
